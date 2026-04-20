@@ -1,10 +1,10 @@
-from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error, InvalidHashError
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from tortoise.exceptions import ValidationError
 from tortoise.transactions import in_transaction
 
+from backend.config import Session
 from backend.database.models import User
 from backend.models.auth import LoginResponse
 from backend.models.error import BadRequest, Unauthorized
@@ -34,7 +34,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             raise auth_error
 
         try:
-            ph = PasswordHasher()
+            ph = Session.password_hasher
             ph.verify(user.password, form_data.password)
 
         except (Argon2Error, InvalidHashError):

@@ -1,8 +1,8 @@
-from argon2 import PasswordHasher
 from fastapi import APIRouter, Depends
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 
+from backend.config import Session
 from backend.database.models import Role, User
 from backend.decorators import check_role
 from backend.models.auth import RegisterItem, RegisterUserResponse
@@ -31,7 +31,7 @@ async def register(
             raise BadRequest(code=ErrorCodes.CANNOT_CREATE_ADMIN_USER)
 
         try:
-            ph = PasswordHasher()
+            ph = Session.password_hasher
 
             user = User(
                 username=item.username,

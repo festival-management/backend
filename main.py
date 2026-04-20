@@ -1,6 +1,4 @@
 import contextlib
-import secrets
-import string
 import sys
 
 import uvicorn
@@ -18,77 +16,71 @@ from backend.database import init_db, stop_db
 from backend.database.models import Role, User, Setting
 from backend.models import BaseResponse, UnicornException
 from backend.models.settings import Settings
-from backend.utils import ErrorCodes, to_snake_case
+from backend.utils import ErrorCodes, to_snake_case, generate_password
+from backend.utils.costants import FMT
 from backend.utils.print_manager import PrintManager
 
-ALPHABET = string.ascii_letters + string.digits
-FMT = (
-    "<green>[{time}]</green> | <level>{level}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:"
-    "<cyan>{line}</cyan> - <level>{message}</level>"
-)
-
 # Logger
-logger.configure(
-    handlers=[
-        {"sink": sys.stdout, "format": FMT},
-        {
-            "sink": "log.log",
-            "format": FMT,
-            "rotation": "1 day",
-            "retention": "7 days",
-        },
-    ]
+logger.remove()
+
+logger.add(sys.stdout, format=FMT)
+logger.add(
+    "log.log",
+    format=FMT,
+    rotation="1 day",
+    retention="7 days",
 )
 
 
 # Create admin user and role - if not exist
 @contextlib.asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
     # Database - TortoiseORM
-    await init_db()
-    logger.info(f"Tortoise-ORM started")
+    async with init_db()(application):
+        logger.info(f"Tortoise-ORM started")
 
-    # Print Manager
-    Session.print_manager = await PrintManager.create()
-    logger.info("Initializing Print Manager")
+        # Print Manager
+        Session.print_manager = await PrintManager.create()
+        logger.info("Initializing Print Manager")
 
-    async with in_transaction() as connection:
-        # Create settings row
-        setting = await Setting.first(using_db=connection)
+        async with in_transaction() as connection:
+            # Create settings row
+            setting = await Setting.first(using_db=connection)
 
-        if not setting:
-            setting = await Setting.create(using_db=connection)
+            if not setting:
+                setting = await Setting.create(using_db=connection)
 
-        # Settings
-        Session.settings = Settings(**await setting.to_dict())
+            # Settings
+            Session.settings = Settings(**await setting.to_dict())
 
-        # Create admin and base role
-        role, _ = await Role.get_or_create(
-            name="admin",
-            defaults={"can_administer": True},
-            using_db=connection,
-        )
+            # Create admin and base role
+            role, _ = await Role.get_or_create(
+                name="admin",
+                defaults={"can_administer": True},
+                using_db=connection,
+            )
 
-        await Role.get_or_create(name="base", using_db=connection)
+            await Role.get_or_create(name="base", using_db=connection)
 
-        # Create admin user
-        password = "".join(secrets.choice(ALPHABET) for _ in range(8))
-        _, created = await User.get_or_create(
-            username="admin",
-            defaults={
-                "password": PasswordHasher().hash(password),
-                "role": role,
-            },
-            using_db=connection,
-        )
+            # Create admin user
+            password = generate_password()
+            ph = Session.password_hasher = PasswordHasher()
+            _, created = await User.get_or_create(
+                username="admin",
+                defaults={
+                    "password": ph.hash(password),
+                    "role": role,
+                },
+                using_db=connection,
+            )
 
-    if created:
-        logger.info(f"Created the admin user with password {password}")
+        if created:
+            logger.info(f"Created the admin user with password {password}")
 
-    yield
+        yield
 
-    await stop_db()
-    logger.info("Tortoise-ORM shutdown")
+        await stop_db()
+        logger.info("Tortoise-ORM shutdown")
 
 
 # Config - Pydantic
@@ -130,24 +122,24 @@ async def unicorn_exception_handler(_: Request, exc: UnicornException):
             message=exc.message,
             code=exc.code.value
             if exc.code
-            else ErrorCodes.GENERIC_HTTP_EXCEPTION,
+            else ErrorCodes.GENERIC_HTTP_EXCEPTION.value,
         ).model_dump(),
     )
 
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_: Request, exc: HTTPException):
-    error_code = to_snake_case(exc.detail)
+    error_code: ErrorCodes = getattr(
+        ErrorCodes,
+        to_snake_case(exc.detail).upper(),
+        ErrorCodes.GENERIC_HTTP_EXCEPTION,
+    )
 
     return JSONResponse(
         status_code=exc.status_code,
         content=BaseResponse(
             error=True,
-            code=getattr(
-                ErrorCodes,
-                error_code,
-                ErrorCodes.GENERIC_HTTP_EXCEPTION,
-            ).value,
+            code=error_code.value,
         ).model_dump(),
     )
 

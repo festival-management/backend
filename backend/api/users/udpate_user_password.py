@@ -1,8 +1,8 @@
-from argon2 import PasswordHasher
 from fastapi import APIRouter, Depends
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 
+from backend.config import Session
 from backend.database.models import User
 from backend.models import BaseResponse
 from backend.models.error import Conflict, NotFound, Unauthorized
@@ -37,7 +37,7 @@ async def update_user_password(
         ):
             raise Unauthorized(code=ErrorCodes.NOT_ALLOWED)
 
-        ph = PasswordHasher()
+        ph = Session.password_hasher
         user.password = ph.hash(item.password)
 
         try:
