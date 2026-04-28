@@ -16,6 +16,7 @@ __all__ = (
     "validate_short_name_field",
     "validate_username_field",
     "validate_ip_address_field",
+    "check_seat_range",
 )
 
 from .enums import Category, Permission, PrinterType
@@ -30,4 +31,5 @@ from .validators import (
     validate_short_name_field,
     validate_username_field,
     validate_ip_address_field,
+    check_seat_range,
 )

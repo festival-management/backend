@@ -18,8 +18,10 @@ __all__ = (
     "ProductVariant",
     "Role",
     "RolePrinter",
+    "RoleTable",
     "Setting",
     "Subcategory",
+    "Table",
     "User",
 )
 
@@ -42,6 +44,8 @@ from .product_role import ProductRole
 from .product_variant import ProductVariant
 from .role import Role
 from .role_printer import RolePrinter
+from .role_table import RoleTable
 from .setting import Setting
 from .subcategory import Subcategory
+from .table import Table
 from .user import User

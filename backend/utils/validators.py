@@ -96,3 +96,8 @@ def validate_receipt_header_field(receipt_header: str):
         )
 
     return receipt_header
+
+
+def check_seat_range(seat_start: int, seat_end: int):
+    if seat_start >= seat_end:
+        raise ValueError("`seat_start` must be less than `seat_end`")

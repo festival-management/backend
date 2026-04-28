@@ -105,6 +105,11 @@ class ErrorCodes(Enum):
     # Create
     SUBCATEGORY_ALREADY_EXISTS = auto()
 
+    # Tables
+    TABLE_NOT_FOUND = auto()
+    # Create
+    TABLE_ALREADY_EXISTS = auto()
+
     # Users
     USER_NOT_FOUND = auto()
 
