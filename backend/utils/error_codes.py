@@ -95,10 +95,14 @@ class ErrorCodes(Enum):
     ROLE_NOT_FOUND = auto()
     # Add role printer
     ROLE_PRINTER_ALREADY_EXISTS = auto()
+    # Add role table
+    ROLE_TABLE_ALREADY_EXISTS = auto()
     # Create
     ROLE_ALREADY_EXISTS = auto()
     # Delete role printer
     ROLE_PRINTER_NOT_FOUND = auto()
+    # Delete role table
+    ROLE_TABLE_NOT_FOUND = auto()
 
     # Subcategories
     SUBCATEGORY_NOT_FOUND = auto()

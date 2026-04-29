@@ -17,12 +17,18 @@ class RolePrinter(BaseModel):
     printer_type: PrinterType
 
 
+class RoleTable(BaseModel):
+    id: int
+    table_id: int
+
+
 class Role(BaseModel):
     id: int
     name: str
     permissions: dict[Permission, bool]
     order_confirmer: Role | None = None
     printers: list[RolePrinter] | None = None
+    tables: list[RoleTable] | None = None
 
 
 class RoleName(BaseModel):
@@ -37,6 +43,14 @@ class AddRolePrinterItem(BaseModel):
 
 class AddRolePrinterResponse(BaseResponse):
     printer: RolePrinter
+
+
+class AddRoleTableItem(BaseModel):
+    table_id: int
+
+
+class AddRoleTableResponse(BaseResponse):
+    table: RoleTable
 
 
 class CreateRoleItem(BaseModel):

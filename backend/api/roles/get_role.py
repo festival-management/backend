@@ -16,6 +16,7 @@ async def get_role(
     role_id: int,
     include_order_confirmer: bool = False,
     include_printers: bool = False,
+    include_tables: bool = False,
     token: TokenJwt = Depends(validate_token),
 ):
     """
@@ -27,11 +28,13 @@ async def get_role(
     async with in_transaction() as connection:
         role = await Role.get_or_none(
             id=role_id, using_db=connection
-        ).prefetch_related("printers", "order_confirmer")
+        ).prefetch_related("printers", "order_confirmer", "tables")
 
         if not role:
             raise NotFound(code=ErrorCodes.ROLE_NOT_FOUND)
 
     return GetRoleResponse(
-        **await role.to_dict(include_order_confirmer, include_printers)
+        **await role.to_dict(
+            include_order_confirmer, include_printers, include_tables
+        )
     )

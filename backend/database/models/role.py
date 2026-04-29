@@ -3,11 +3,10 @@ import typing
 from tortoise import fields
 from tortoise.models import Model
 
-from backend.config import Session
 from backend.utils import ErrorCodes
 
 if typing.TYPE_CHECKING:
-    from backend.database.models import RolePrinter
+    from backend.database.models import RolePrinter, RoleTable
 
 
 class Role(Model):
@@ -27,6 +26,7 @@ class Role(Model):
     )
 
     printers: fields.ReverseRelation["RolePrinter"]
+    tables: fields.ReverseRelation["RoleTable"]
 
     order_confirmer_id: int
 
@@ -55,6 +55,7 @@ class Role(Model):
         self,
         include_order_confirmer: bool = False,
         include_printers: bool = False,
+        include_tables: bool = False,
     ) -> dict:
         result = {
             "id": self.id,
@@ -74,5 +75,8 @@ class Role(Model):
             result["printers"] = [
                 await printer.to_dict() for printer in self.printers
             ]
+
+        if include_tables and hasattr(self, "tables"):
+            result["tables"] = [await table.to_dict() for table in self.tables]
 
         return result
