@@ -11,6 +11,7 @@ from backend.models import BaseResponse
 from backend.models.error import Unauthorized, NotFound
 from backend.models.orders import ConfirmOrderItem
 from backend.utils import ErrorCodes, Permission, TokenJwt, validate_token
+from backend.utils.order_utils import is_table_allowed_for_role
 
 confirm_order_router = APIRouter()
 
@@ -44,6 +45,11 @@ async def confirm_order(
 
         if order.user.role.order_confirmer_id != token.role_id:
             raise Unauthorized(code=ErrorCodes.NOT_ALLOWED)
+
+        if not await is_table_allowed_for_role(
+            token.role_id, item.table, connection
+        ):
+            raise Unauthorized(code=ErrorCodes.TABLE_NOT_ALLOWED_FOR_ROLE)
 
         rome_tz = pytz.timezone("Europe/Rome")
         now_in_rome = datetime.datetime.now(rome_tz)

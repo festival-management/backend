@@ -12,6 +12,7 @@ from backend.database.models import (
     OrderProduct,
     OrderProductIngredient,
     Product,
+    Role,
 )
 from backend.models.orders import (
     CreateOrderMenuItem,
@@ -43,9 +44,11 @@ async def _check_generic_product(
     if product_variants and not product.variant_id:
         return (
             True,
-            ErrorCodes.INPUT_MENU_FIELD_PRODUCT_VARIANT
-            if is_menu
-            else ErrorCodes.INPUT_PRODUCT_VARIANT,
+            (
+                ErrorCodes.INPUT_MENU_FIELD_PRODUCT_VARIANT
+                if is_menu
+                else ErrorCodes.INPUT_PRODUCT_VARIANT
+            ),
         )
 
     if product.variant_id:
@@ -53,17 +56,21 @@ async def _check_generic_product(
         if not product_variant:
             return (
                 True,
-                ErrorCodes.MENU_FIELD_PRODUCT_VARIANT_NOT_EXIST
-                if is_menu
-                else ErrorCodes.PRODUCT_VARIANT_NOT_EXIST,
+                (
+                    ErrorCodes.MENU_FIELD_PRODUCT_VARIANT_NOT_EXIST
+                    if is_menu
+                    else ErrorCodes.PRODUCT_VARIANT_NOT_EXIST
+                ),
             )
 
         if product_variant.is_deleted:
             return (
                 True,
-                ErrorCodes.MENU_FIELD_PRODUCT_VARIANT_NOT_EXIST
-                if is_menu
-                else ErrorCodes.PRODUCT_VARIANT_NOT_EXIST,
+                (
+                    ErrorCodes.MENU_FIELD_PRODUCT_VARIANT_NOT_EXIST
+                    if is_menu
+                    else ErrorCodes.PRODUCT_VARIANT_NOT_EXIST
+                ),
             )
 
         product_price += Decimal(product_variant.price).quantize(ZERO_DECIMAL)
@@ -79,9 +86,11 @@ async def _check_generic_product(
     ):
         return (
             True,
-            ErrorCodes.INPUT_DUPLICATE_MENU_FIELD_PRODUCT_INGREDIENT
-            if is_menu
-            else ErrorCodes.INPUT_DUPLICATE_PRODUCT_INGREDIENT,
+            (
+                ErrorCodes.INPUT_DUPLICATE_MENU_FIELD_PRODUCT_INGREDIENT
+                if is_menu
+                else ErrorCodes.INPUT_DUPLICATE_PRODUCT_INGREDIENT
+            ),
         )
 
     for ingredient in product.ingredients:
@@ -89,17 +98,21 @@ async def _check_generic_product(
         if not product_ingredient:
             return (
                 True,
-                ErrorCodes.MENU_FIELD_PRODUCT_INGREDIENT_NOT_EXIST
-                if is_menu
-                else ErrorCodes.PRODUCT_INGREDIENT_NOT_EXIST,
+                (
+                    ErrorCodes.MENU_FIELD_PRODUCT_INGREDIENT_NOT_EXIST
+                    if is_menu
+                    else ErrorCodes.PRODUCT_INGREDIENT_NOT_EXIST
+                ),
             )
 
         if product_ingredient.is_deleted:
             return (
                 True,
-                ErrorCodes.MENU_FIELD_PRODUCT_INGREDIENT_NOT_EXIST
-                if is_menu
-                else ErrorCodes.PRODUCT_INGREDIENT_NOT_EXIST,
+                (
+                    ErrorCodes.MENU_FIELD_PRODUCT_INGREDIENT_NOT_EXIST
+                    if is_menu
+                    else ErrorCodes.PRODUCT_INGREDIENT_NOT_EXIST
+                ),
             )
 
         product_price += (Decimal(product_ingredient.price)).quantize(
@@ -449,3 +462,26 @@ async def get_order_price(order: CreateOrderItem) -> Decimal:
         price += Decimal(x._price).quantize(ZERO_DECIMAL)
 
     return price
+
+
+async def is_table_allowed_for_role(
+    role_id: int,
+    table: int,
+    connection: BaseDBAsyncClient,
+) -> bool:
+    role_db = (
+        await Role.filter(id=role_id)
+        .prefetch_related("tables__table")
+        .using_db(connection)
+        .first()
+    )
+
+    if not role_db:
+        return False
+
+    if not role_db.tables:
+        return True
+
+    return any(
+        t.table.seat_start <= table <= t.table.seat_end for t in role_db.tables
+    )

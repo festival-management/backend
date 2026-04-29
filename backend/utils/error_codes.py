@@ -35,6 +35,7 @@ class ErrorCodes(Enum):
 
     # Orders
     ORDER_NOT_FOUND = auto()
+    TABLE_NOT_ALLOWED_FOR_ROLE = auto()
     # Confirm
     ORDER_ALREADY_CONFIRMED = auto()
     # Create
