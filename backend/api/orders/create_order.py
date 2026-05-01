@@ -41,9 +41,8 @@ async def create_order(
     if (
         not item.is_take_away
         and not Session.settings.order_requires_confirmation
-        and not item.guests
-        and not item.table
         and not item.parent_order_id
+        and (not item.guests or not item.table)
     ):
         raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
 
