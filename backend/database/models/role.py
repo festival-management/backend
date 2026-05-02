@@ -21,6 +21,8 @@ class Role(Model):
     can_statistics = fields.BooleanField(default=False)
     can_priority_statistics = fields.BooleanField(default=False)
     can_confirm_orders = fields.BooleanField(default=False)
+    can_serve_orders = fields.BooleanField(default=False)
+    can_modify_completed_orders = fields.BooleanField(default=False)
     order_confirmer = fields.ForeignKeyField(
         "models.Role", "roles_to_confirm", null=True
     )
@@ -46,6 +48,8 @@ class Role(Model):
             "can_statistics": self.can_statistics,
             "can_priority_statistics": self.can_priority_statistics,
             "can_confirm_orders": self.can_confirm_orders,
+            "can_serve_orders": self.can_serve_orders,
+            "can_modify_completed_orders": self.can_modify_completed_orders,
         }
 
     async def to_dict_name(self) -> dict:
