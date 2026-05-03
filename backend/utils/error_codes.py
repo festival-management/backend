@@ -64,6 +64,8 @@ class ErrorCodes(Enum):
     PRODUCT_ROLE_NOT_EXIST = auto()
     PRODUCT_VARIANT_NOT_EXIST = auto()
     SET_GUESTS_NUMBER = auto()
+    # Serve order
+    ORDER_ALREADY_SERVED = auto()
 
     # Printers
     PRINTER_NOT_FOUND = auto()

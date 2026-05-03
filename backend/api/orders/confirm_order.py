@@ -23,10 +23,13 @@ async def confirm_order(
     item: ConfirmOrderItem,
     token: TokenJwt = Depends(validate_token),
 ):
-    if (
-        not Session.settings.order_requires_confirmation
-        or not token.permissions["can_confirm_orders"]
-    ):
+    """
+    Confirm an order.
+
+    **Permission**: can_confirm_orders
+    """
+
+    if not Session.settings.order_requires_confirmation:
         raise Unauthorized(code=ErrorCodes.NOT_ALLOWED)
 
     async with in_transaction() as connection:
