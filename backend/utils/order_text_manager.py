@@ -370,7 +370,13 @@ class OrderTextManager:
         )
         result += "* CLIENTE: " + customer.upper() + "\n"
 
-        if self.order.is_take_away:
+        is_take_away = (
+            self.order.is_take_away
+            if not self.order.parent_order
+            else self.order.parent_order.is_take_away
+        )
+
+        if is_take_away:
             result += "* Per asporto: si" + "\n"
         else:
             if self.order.table:
