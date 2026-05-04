@@ -24,7 +24,7 @@ create_order_router = APIRouter()
 
 
 @create_order_router.post("/", response_model=CreateOrderResponse)
-@check_role(Permission.CAN_ORDER)
+@check_role(Permission.CAN_ORDER, Permission.CAN_MODIFY_COMPLETED_ORDERS)
 async def create_order(
     item: CreateOrderItem,
     token: TokenJwt = Depends(validate_token),
@@ -39,20 +39,28 @@ async def create_order(
         raise BadRequest(code=ErrorCodes.NO_PRODUCTS_AND_MENUS)
 
     if (
-        not item.is_take_away
-        and not Session.settings.order_requires_confirmation
+        token.permissions["can_modify_completed_orders"]
         and not item.parent_order_id
-        and (not item.guests or not item.table)
     ):
-        raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
+        raise BadRequest(code=ErrorCodes.PARENT_ORDER_ID_REQUIRED)
 
-    if (
-        not item.is_take_away
-        and Session.settings.order_requires_confirmation
-        and not item.guests
-        and not item.parent_order_id
-    ):
-        raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
+    if token.permissions["can_order"]:
+        if item.parent_order_id:
+            raise BadRequest(code=ErrorCodes.PARENT_ORDER_ID_NOT_ALLOWED)
+
+        if (
+            not item.is_take_away
+            and not Session.settings.order_requires_confirmation
+            and (not item.guests or not item.table)
+        ):
+            raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
+
+        if (
+            not item.is_take_away
+            and Session.settings.order_requires_confirmation
+            and not item.guests
+        ):
+            raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
 
     async with in_transaction() as connection:
         await connection.execute_query(
@@ -66,6 +74,9 @@ async def create_order(
 
             if not parent_order:
                 raise NotFound(code=ErrorCodes.ORDER_NOT_FOUND)
+
+            if not parent_order.is_confirm:
+                raise BadRequest(code=ErrorCodes.PARENT_ORDER_NOT_CONFIRMED)
 
         if (
             not Session.settings.order_requires_confirmation

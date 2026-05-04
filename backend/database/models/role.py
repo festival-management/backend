@@ -39,6 +39,11 @@ class Role(Model):
         if self.can_statistics and self.can_priority_statistics:
             raise ValueError(ErrorCodes.ONLY_ONE_STATISTICS_CAN_BE_TRUE)
 
+        if self.can_order and self.can_modify_completed_orders:
+            raise ValueError(
+                ErrorCodes.ORDER_AND_MODIFY_COMPLETED_ORDERS_MUTUALLY_EXCLUSIVE
+            )
+
         await super().save(*args, **kwargs)
 
     async def get_permissions(self) -> dict:

@@ -49,7 +49,7 @@ async def confirm_order(
         if order.user.role.order_confirmer_id != token.role_id:
             raise Unauthorized(code=ErrorCodes.NOT_ALLOWED)
 
-        if not await is_table_allowed_for_role(
+        if not order.is_take_away and not await is_table_allowed_for_role(
             token.role_id, item.table, connection
         ):
             raise Unauthorized(code=ErrorCodes.TABLE_NOT_ALLOWED_FOR_ROLE)
