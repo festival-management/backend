@@ -71,6 +71,8 @@ async def get_statistic(
             lambda: {
                 "quantity": 0,
                 "voucher_quantity": 0,
+                "pending_quantity": 0,
+                "price": Decimal("0.00"),
                 "total_price": Decimal("0.00"),
             }
         )
@@ -79,23 +81,29 @@ async def get_statistic(
             is_voucher = order.is_voucher
 
             order_products = [
-                (op, op.product.name)
+                (op, op.product.name, op.product.price)
                 for op in order.order_products
                 if op.order_menu_field_id is None
                 and (not can_priority_statistics or op.product.is_priority)
             ]
             order_menus = [
-                (om, om.menu.name)
+                (om, om.menu.name, om.menu.price)
                 for om in order.order_menus
                 if not can_priority_statistics
             ]
 
-            for x, name in order_products + order_menus:
+            for x, name, current_price in order_products + order_menus:
+                if not result_map[name]["price"]:
+                    result_map[name]["price"] = Decimal(str(current_price))
+
+                if not order.is_served:
+                    result_map[name]["pending_quantity"] += x.quantity
+
                 if is_voucher:
                     result_map[name]["voucher_quantity"] += x.quantity
                 else:
                     result_map[name]["quantity"] += x.quantity
-                    price_to_add = Decimal(x.price)
+                    price_to_add = Decimal(str(x.price))
                     result_map[name]["total_price"] += price_to_add
                     total_price_without_cover += price_to_add
 
@@ -103,9 +111,8 @@ async def get_statistic(
             StatisticProduct(
                 name=name,
                 quantity=values["quantity"] + values["voucher_quantity"],
-                price=(values["total_price"] / values["quantity"])
-                if values["quantity"] > 0
-                else Decimal("0.00"),
+                pending_quantity=values["pending_quantity"],
+                price=values["price"],
                 total_price=values["total_price"],
             )
             for name, values in result_map.items()

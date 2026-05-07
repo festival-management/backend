@@ -8,6 +8,7 @@ from backend.models import BaseResponse
 class StatisticProduct(BaseModel):
     name: str
     quantity: int
+    pending_quantity: int
     price: Decimal
     total_price: Decimal
 
