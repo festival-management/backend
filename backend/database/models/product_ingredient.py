@@ -9,7 +9,7 @@ class ProductIngredient(Model):
 
     id = fields.IntField(pk=True)
     name = fields.CharField(32)
-    price = fields.FloatField()
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
     is_deleted = fields.BooleanField(default=False)
     product = fields.ForeignKeyField("models.Product", "ingredients")
 

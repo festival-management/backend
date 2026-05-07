@@ -8,7 +8,7 @@ class MenuFieldProduct(Model):
     """
 
     id = fields.IntField(pk=True)
-    price = fields.FloatField()
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
     product = fields.ForeignKeyField("models.Product")
     menu_field = fields.ForeignKeyField("models.MenuField", "field_products")
 

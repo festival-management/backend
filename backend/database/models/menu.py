@@ -15,7 +15,7 @@ class Menu(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(32, unique=True)
     short_name = fields.CharField(20, unique=True)
-    price = fields.FloatField()
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
     daily_max_sales = fields.IntField(null=True)
 
     dates: fields.ReverseRelation["MenuDate"]

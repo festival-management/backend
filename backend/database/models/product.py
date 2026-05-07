@@ -23,7 +23,7 @@ class Product(Model):
     name = fields.CharField(32, unique=True)
     short_name = fields.CharField(20, unique=True)
     is_priority = fields.BooleanField(default=False)
-    price = fields.FloatField()
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
     category = fields.CharEnumField(Category)
     order = fields.IntField(default=0)
     daily_max_sales = fields.IntField(null=True)
