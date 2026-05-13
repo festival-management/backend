@@ -400,6 +400,9 @@ class OrderTextManager:
         if self.order.is_voucher:
             result += "* Buono: si" + "\n"
 
+        if self.order.is_takeaway_kiosk:
+            result += "* ASPORTO CHIOSCO: si" + "\n"
+
         result += "\n"
 
         return result

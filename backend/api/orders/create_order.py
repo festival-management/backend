@@ -38,6 +38,9 @@ async def create_order(
     if not item.products and not item.menus:
         raise BadRequest(code=ErrorCodes.NO_PRODUCTS_AND_MENUS)
 
+    if item.is_takeaway_kiosk and item.is_take_away:
+        raise BadRequest(code=ErrorCodes.CANNOT_BE_BOTH_TAKEAWAY_AND_KIOSK)
+
     if (
         token.permissions["can_modify_completed_orders"]
         and not item.parent_order_id
@@ -47,6 +50,9 @@ async def create_order(
     if token.permissions["can_order"]:
         if item.parent_order_id:
             raise BadRequest(code=ErrorCodes.PARENT_ORDER_ID_NOT_ALLOWED)
+
+        if item.is_takeaway_kiosk and not item.guests:
+            raise BadRequest(code=ErrorCodes.SET_GUESTS_NUMBER)
 
         if (
             not item.is_take_away
@@ -80,6 +86,7 @@ async def create_order(
 
         if (
             not Session.settings.order_requires_confirmation
+            and not (item.is_take_away or item.is_takeaway_kiosk)
             and not await is_table_allowed_for_role(
                 token.role_id, item.table, connection
             )
@@ -117,6 +124,7 @@ async def create_order(
                 if not item.is_take_away
                 and not Session.settings.order_requires_confirmation
                 and not item.parent_order_id
+                and not item.is_takeaway_kiosk
                 else None
             ),
             is_confirm=(
@@ -125,6 +133,7 @@ async def create_order(
                 else False
             ),
             is_voucher=item.is_voucher,
+            is_takeaway_kiosk=item.is_takeaway_kiosk,
             price=order_price,
             user_id=token.user_id,
             parent_order_id=item.parent_order_id,

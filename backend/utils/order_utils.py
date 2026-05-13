@@ -450,7 +450,11 @@ async def get_order_price(order: CreateOrderItem) -> Decimal:
         for product in field.products
     )
 
-    if include_cover_charge and not order.is_take_away:
+    if (
+        include_cover_charge
+        and not order.is_take_away
+        and not order.parent_order_id
+    ):
         price = (cover_change * guests).quantize(ZERO_DECIMAL)
     else:
         order.guests = None

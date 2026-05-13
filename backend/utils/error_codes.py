@@ -38,7 +38,10 @@ class ErrorCodes(Enum):
     TABLE_NOT_ALLOWED_FOR_ROLE = auto()
     # Confirm
     ORDER_ALREADY_CONFIRMED = auto()
+    ORDER_MUST_BE_TAKEAWAY_OR_KIOSK = auto()
+    TABLE_REQUIRED = auto()
     # Create
+    CANNOT_BE_BOTH_TAKEAWAY_AND_KIOSK = auto()
     DUPLICATE_MENU_FIELDS = auto()
     DUPLICATE_MENU_FIELDS_PRODUCT = auto()
     INPUT_MENU_FIELD_PRODUCT_VARIANT = auto()

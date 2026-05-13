@@ -22,6 +22,7 @@ class Order(Model):
     is_deleted = fields.BooleanField(default=False)
     is_voucher = fields.BooleanField(default=False)
     is_served = fields.BooleanField(default=False)
+    is_takeaway_kiosk = fields.BooleanField(default=False)
     price = fields.DecimalField(max_digits=10, decimal_places=2)
     user = fields.ForeignKeyField("models.User")
     confirmed_by = fields.ForeignKeyField(

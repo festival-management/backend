@@ -58,7 +58,8 @@ class Order(BaseModel):
 
 
 class ConfirmOrderItem(BaseModel):
-    table: int = Field(ge=1)
+    table: int | None = Field(ge=1, default=None)
+    is_takeaway_or_kiosk: bool
 
 
 class CreateOrderProductIngredientItem(BaseModel):
@@ -92,6 +93,7 @@ class CreateOrderItem(BaseModel):
     customer: str
     guests: int | None = Field(ge=1, default=None)
     is_take_away: bool
+    is_takeaway_kiosk: bool
     table: int | None = Field(ge=1, default=None)
     is_voucher: bool
     parent_order_id: int | None = None

@@ -1,6 +1,6 @@
 import datetime
-import pytz
 
+import pytz
 from fastapi import APIRouter, Depends
 from tortoise.transactions import in_transaction
 
@@ -8,7 +8,7 @@ from backend.config import Session
 from backend.database.models import Order
 from backend.decorators import check_role
 from backend.models import BaseResponse
-from backend.models.error import Unauthorized, NotFound
+from backend.models.error import Unauthorized, NotFound, BadRequest
 from backend.models.orders import ConfirmOrderItem
 from backend.utils import ErrorCodes, Permission, TokenJwt, validate_token
 from backend.utils.order_utils import is_table_allowed_for_role
@@ -49,7 +49,15 @@ async def confirm_order(
         if order.user.role.order_confirmer_id != token.role_id:
             raise Unauthorized(code=ErrorCodes.NOT_ALLOWED)
 
-        if not order.is_take_away and not await is_table_allowed_for_role(
+        has_takeaway_type = order.is_take_away or order.is_takeaway_kiosk
+
+        if item.is_takeaway_or_kiosk and not has_takeaway_type:
+            raise BadRequest(code=ErrorCodes.ORDER_MUST_BE_TAKEAWAY_OR_KIOSK)
+
+        if not has_takeaway_type and not item.table:
+            raise BadRequest(code=ErrorCodes.TABLE_REQUIRED)
+
+        if not has_takeaway_type and not await is_table_allowed_for_role(
             token.role_id, item.table, connection
         ):
             raise Unauthorized(code=ErrorCodes.TABLE_NOT_ALLOWED_FOR_ROLE)
@@ -59,7 +67,7 @@ async def confirm_order(
 
         await order.update_from_dict(
             {
-                "table": item.table if not order.is_take_away else None,
+                "table": item.table if not has_takeaway_type else None,
                 "confirmed_by_id": token.user_id,
                 "is_confirm": True,
                 "confirmed_at": now_in_rome,
