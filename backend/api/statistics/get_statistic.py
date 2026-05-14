@@ -12,8 +12,7 @@ from backend.decorators import check_role
 from backend.models.error import UnprocessableEntity
 from backend.models.statistics import GetStatisticResponse, StatisticProduct
 from backend.utils import Permission, TokenJwt, validate_token, ErrorCodes
-
-ROLE_ID_REGEX = re.compile(r"^\d+(,\d+)*$")
+from backend.utils.costants import ROLE_ID_REGEX
 
 get_statistic_router = APIRouter()
 
@@ -59,11 +58,7 @@ async def get_statistic(
         )
         total_voucher = sum(1 for order in orders if order.is_voucher)
         total_price_with_cover = Decimal(
-            sum(
-                Decimal(order.price)
-                for order in orders
-                if not order.is_voucher
-            )
+            sum(order.price for order in orders if not order.is_voucher)
         )
 
         total_price_without_cover = Decimal("0.00")
@@ -94,7 +89,7 @@ async def get_statistic(
 
             for x, name, current_price in order_products + order_menus:
                 if not result_map[name]["price"]:
-                    result_map[name]["price"] = Decimal(str(current_price))
+                    result_map[name]["price"] = current_price
 
                 if not order.is_served:
                     result_map[name]["pending_quantity"] += x.quantity
@@ -103,7 +98,7 @@ async def get_statistic(
                     result_map[name]["voucher_quantity"] += x.quantity
                 else:
                     result_map[name]["quantity"] += x.quantity
-                    price_to_add = Decimal(str(x.price))
+                    price_to_add = x.price
                     result_map[name]["total_price"] += price_to_add
                     total_price_without_cover += price_to_add
 

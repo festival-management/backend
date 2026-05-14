@@ -13,6 +13,11 @@ class StatisticProduct(BaseModel):
     total_price: Decimal
 
 
+class PendingStatisticProduct(BaseModel):
+    name: str
+    pending_quantity: int
+
+
 class Statistic(BaseModel):
     total_orders: int
     total_seated: int
@@ -23,5 +28,16 @@ class Statistic(BaseModel):
     products: list[StatisticProduct]
 
 
+class PendingStatistic(BaseModel):
+    total_orders: int
+    total_seated: int
+    total_take_away: int
+    products: list[PendingStatisticProduct]
+
+
 class GetStatisticResponse(BaseResponse, Statistic):
+    pass
+
+
+class GetPendingStatisticResponse(BaseResponse, PendingStatistic):
     pass
