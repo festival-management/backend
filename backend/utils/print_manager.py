@@ -175,7 +175,7 @@ class PrintManager:
             while True:
                 try:
                     await asyncio.to_thread(
-                        self._print_content, printer, content
+                        self._print_content, printer, content, order.id
                     )
                 except Exception as e:
                     attempts += 1
@@ -206,7 +206,7 @@ class PrintManager:
                 logger.success(f"Order {order.id} marked as printed.")
 
     @staticmethod
-    def _print_content(printer: Network, content: str):
+    def _print_content(printer: Network, content: str, order_id: int):
         printer.open()
         for line in re.split(r"(?<=\n)", content):
             printer.set(align="left", font="a")
@@ -215,12 +215,13 @@ class PrintManager:
             for part in parts:
                 if part.startswith("<DOUBLE>") and part.endswith("</DOUBLE>"):
                     inner = part[len("<DOUBLE>") : -len("</DOUBLE>")]
-                    printer._raw(b"\x1B\x21\x30")
+                    printer._raw(b"\x1b\x21\x30")
                     printer.text(inner)
-                    printer._raw(b"\x1B\x21\x00")
+                    printer._raw(b"\x1b\x21\x00")
                 else:
                     printer.text(part)
 
+        printer.barcode(str(order_id), "CODE128", height=100, width=3)
         printer.cut()
 
     async def add_job(self, order: Order, printer_types: list[PrinterType]):
