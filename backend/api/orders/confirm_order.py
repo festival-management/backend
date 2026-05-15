@@ -54,6 +54,9 @@ async def confirm_order(
         if item.is_takeaway_or_kiosk and not has_takeaway_type:
             raise BadRequest(code=ErrorCodes.ORDER_MUST_BE_TAKEAWAY_OR_KIOSK)
 
+        if has_takeaway_type and not item.is_takeaway_or_kiosk:
+            raise BadRequest(code=ErrorCodes.ORDER_MUST_BE_TAKEAWAY_OR_KIOSK)
+
         if not has_takeaway_type and not item.table:
             raise BadRequest(code=ErrorCodes.TABLE_REQUIRED)
 

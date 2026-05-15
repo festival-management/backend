@@ -77,7 +77,11 @@ async def get_pending_statistic(
             ]
 
             for x, name in order_products + order_menus:
-                result_map[name] += x.quantity
+                if not result_map.get(name):
+                    result_map[name] = 0
+
+                if not order.is_served:
+                    result_map[name] += x.quantity
 
         result = [
             PendingStatisticProduct(
